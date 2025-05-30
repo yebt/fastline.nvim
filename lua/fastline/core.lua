@@ -1,28 +1,30 @@
 local config = require("fastline.config")
 local rendered_once = false
 
-local function get_module_output(name)
-  if type(name) ~= "string" then
+local function get_module_output(entry)
+  if type(entry) == "string" then
+    if registered[entry] then
+      return coroutine.create(registered[entry])
+    end
+
+    -- try to require built-in modules
+    local ok, mod = pcall(require, "fastline.modules." .. entry)
+    if ok and mod and mod.get then
+      return coroutine.create(mod.get)
+    end
+
+    -- expression or literal
+    if entry:match("^%%{.*}$") or entry:match("^%s+$") then
+      return coroutine.create(function() return entry end)
+    end
+
+    return coroutine.create(function() return "[error:" .. entry .. "]" end)
+  elseif type(entry) == "table" and entry.text then
+    local hl = entry.hl and ("%#" .. entry.hl .. "#") or ""
     return coroutine.create(function()
-      return ""
+      return hl .. entry.text
     end)
   end
-
-  -- Literal space or Vim expressions like %{...}
-  if name:match("^%%{.*}$") or name:match("^%s+$") then
-    return coroutine.create(function()
-      return name
-    end)
-  end
-
-  local ok, mod = pcall(require, "modeline.modules." .. name)
-  if ok and mod and mod.get then
-    return coroutine.create(mod.get)
-  end
-
-  return coroutine.create(function()
-    return "[error:load:" .. name .. "]"
-  end)
 end
 
 local function run_coroutines(module_names)
