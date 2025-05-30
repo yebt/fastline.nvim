@@ -16,8 +16,7 @@ vim.api.nvim_create_autocmd("User", {
   pattern = "FastlineReady",
   callback = function()
     M.capture_startup_time()
-    --- ERROR
-    -- require("modeline.redraw").schedule()
+    require("fastline.redraw").schedule()
   end,
 })
 
