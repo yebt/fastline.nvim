@@ -54,7 +54,7 @@ end
 
 local function render_section(modules, separator)
   local parts = run_coroutines(modules)
-  return table.concat(parts, separator or "%#FastlineSeparator# | %#Normal#")
+  return table.concat(parts, separator or config.get_separator())
 end
 
 local function render()
@@ -76,5 +76,3 @@ end
 return {
   render = render,
 }
-
-
