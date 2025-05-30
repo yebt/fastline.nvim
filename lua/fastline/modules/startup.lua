@@ -9,7 +9,7 @@ end
 
 function M.get()
   -- M.capture_startup_time()
-  return startup_time and string.format("%%#FastlineStartup#Startup: %.2fms", startup_time * 1000) or "--"
+  return startup_time and string.format("%%#FastlineStartup#󱐋 %.2fms", startup_time * 1000) or "--"
 end
 
 vim.api.nvim_create_autocmd("User", {
