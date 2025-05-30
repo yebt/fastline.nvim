@@ -1,30 +1,17 @@
 local M = {}
 
-function colorize(name, opts)
-  vim.api.nvim_set_hl(0, name, opts)
-end
-
 function M.setup()
-  local colors = {
-    green_pistachio = "#98c379",
-    blue_argentinian = "#61afef",
-    gray_paynes = "#5c6370",
-  }
+  local hl = vim.api.nvim_set_hl
+  hl(0, "FastlineSeparator", { fg = "#888888" })
+  hl(0, "FastlineEncoding", { fg = "#ffaa00" })
+  hl(0, "FastlineInfo", { fg = "#55aaee" })
+  hl(0, "FastlineArrow", { fg = "#ffaaee" })
 
-  local theme = {
-    ["ModelineLSP"] = { fg = colors.green_pistachio, bold = true },
-    ["ModelineStartup"] = { fg = colors.blue_argentinian, bold = true },
-    ["ModelineSeparator"] = { fg = colors.gray_paynes },
-  }
-  for name, opts in pairs(theme) do
-    colorize(name, opts)
-  end
-  -- vim.cmd("highlight FastlineLSP guifg=#98c379 guibg=NONE gui=bold")
-  -- vim.cmd("highlight FastlineStartup guifg=#61afef guibg=NONE gui=bold")
-  -- vim.cmd("highlight FastlineMode guifg=#e5c07b guibg=NONE gui=bold")
-  -- vim.cmd("highlight FastlineFilename guifg=#abb2bf guibg=NONE")
-  -- vim.cmd("highlight FastlineGit guifg=#ff6c6b guibg=NONE gui=bold")
-  -- vim.cmd("highlight FastlineSeparator guifg=#5c6370 guibg=NONE")
+  -- Mode-specific highlights
+  hl(0, "FastlineModeNormal", { fg = "#98c379", bold = true })
+  hl(0, "FastlineModeInsert", { fg = "#61afef", bold = true })
+  hl(0, "FastlineModeVisual", { fg = "#c678dd", bold = true })
 end
 
 return M
+

@@ -7,10 +7,7 @@ local M = {
 }
 
 function M.setup(opts)
-  opts = opts or {}
-  for section, modules in pairs(opts.sections or {}) do
-    M.sections[section] = modules
-  end
+  M.sections = vim.tbl_deep_extend("force", M.sections, opts.sections or {})
 end
 
 function M.get_sections()
@@ -18,3 +15,4 @@ function M.get_sections()
 end
 
 return M
+

@@ -1,44 +1,50 @@
 local config = require("fastline.config")
 local rendered_once = false
+local user_modules = require("fastline").get_user_modules()
 
-local function get_module_output(entry)
-  if type(entry) == "string" then
-    if registered[entry] then
-      return coroutine.create(registered[entry])
-    end
-
-    -- try to require built-in modules
-    local ok, mod = pcall(require, "fastline.modules." .. entry)
-    if ok and mod and mod.get then
-      return coroutine.create(mod.get)
-    end
-
-    -- expression or literal
-    if entry:match("^%%{.*}$") or entry:match("^%s+$") then
-      return coroutine.create(function() return entry end)
-    end
-
-    return coroutine.create(function() return "[error:" .. entry .. "]" end)
-  elseif type(entry) == "table" and entry.text then
-    local hl = entry.hl and ("%#" .. entry.hl .. "#") or ""
+local function get_module_output(name)
+  if type(name) == "table" and name.text then
+    local hl = name.hl and ("%#" .. name.hl .. "#") or ""
     return coroutine.create(function()
-      return hl .. entry.text
+      return hl .. name.text
     end)
   end
+
+  if type(name) ~= "string" then
+    return coroutine.create(function()
+      return ""
+    end)
+  end
+
+  if name:match("^%%{.*}$") or name:match("^%s+$") then
+    return coroutine.create(function()
+      return name
+    end)
+  end
+
+  if user_modules[name] then
+    return coroutine.create(user_modules[name])
+  end
+
+  local ok, mod = pcall(require, "fastline.modules." .. name)
+  if ok and mod and mod.get then
+    return coroutine.create(mod.get)
+  end
+
+  return coroutine.create(function()
+    return "[error:load:" .. name .. "]"
+  end)
 end
 
-local function run_coroutines(module_names)
+local function run_coroutines(modules)
   local results = {}
-  for _, name in ipairs(module_names) do
+  for _, name in ipairs(modules) do
     local co = get_module_output(name)
     local ok, result = coroutine.resume(co)
     if not ok then
       result = "[error:" .. name .. "]"
       vim.schedule(function()
-        vim.notify(
-          "fastline.nvim: error in module '" .. name .. "':\n" .. tostring(result),
-          vim.log.levels.ERROR
-        )
+        vim.notify("fastline.nvim: error in module '" .. name .. "':\n" .. tostring(result), vim.log.levels.ERROR)
       end)
     end
     table.insert(results, result or "")
@@ -70,3 +76,5 @@ end
 return {
   render = render,
 }
+
+

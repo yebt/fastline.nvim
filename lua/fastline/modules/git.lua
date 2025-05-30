@@ -1,17 +1,9 @@
 local M = {}
-local redraw = require("modeline.redraw")
-
 function M.get()
-  local head = vim.b.gitsigns_head
-  if not head then
-    return ""
+  local branch = vim.b.gitsigns_head or ""
+  if branch ~= "" then
+    return " " .. branch
   end
-  return "%#FastlineGit# " .. head .. " "
+  return ""
 end
-
-vim.api.nvim_create_autocmd("User", {
-  pattern = "GitsignsUpdate",
-  callback = redraw.schedule,
-})
-
 return M
