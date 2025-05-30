@@ -2,9 +2,8 @@ local M = {}
 local redraw = require("fastline.redraw")
 
 function M.get()
-  local filename = vim.fn.expand("%:t")
-  if filename == "" then filename = "[No Name]" end
-  return "%#FastlineFilename# " .. filename .. " "
+  local name = vim.fn.expand("%:t")
+  return "%#FastlineFilename# " .. (name ~= "" and name or "[No Name]") .. " "
 end
 
 vim.api.nvim_create_autocmd({ "BufEnter", "BufFilePost" }, {
@@ -12,3 +11,4 @@ vim.api.nvim_create_autocmd({ "BufEnter", "BufFilePost" }, {
 })
 
 return M
+
