@@ -2,8 +2,8 @@ local M = {}
 local redraw = require("fastline.redraw")
 
 function M.get()
-  local clients = vim.lsp.get_active_clients({ bufnr = 0 })
-  if #clients == 0 then return "" end
+  local clients = vim.lsp.get_clients({ bufnr = 0 })
+  if #clients == 0 then return "%#FastlineLSP#" end
 
   local names = {}
   for _, client in pairs(clients) do
