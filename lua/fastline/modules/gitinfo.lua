@@ -5,7 +5,7 @@ local M = {}
 
 local alias = { "Head", "Add", "Change", "Delete" }
 local order = { "head", "added", "changed", "removed" }
-local signs = { "Git:", "+", "~", "-" }
+local signs = { " ", "+", "~", "-" }
 
 -- Setup highlights once per session
 local function setup_git_highlight()
