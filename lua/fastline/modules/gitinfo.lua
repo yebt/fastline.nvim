@@ -25,11 +25,12 @@ end
 
 function M.get()
   setup_git_highlight()
-
   return coroutine.create(function()
+
     local ok, dict = pcall(api.nvim_buf_get_var, 0, "gitsigns_status_dict")
+    vim.print('uwu')
     if not ok or vim.tbl_isempty(dict) then
-      return ""
+      return "##"
     end
 
     -- Fill in default branch name if missing
