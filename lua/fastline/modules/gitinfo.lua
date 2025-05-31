@@ -28,9 +28,8 @@ function M.get()
   return coroutine.create(function()
 
     local ok, dict = pcall(api.nvim_buf_get_var, 0, "gitsigns_status_dict")
-    vim.print('uwu')
     if not ok or vim.tbl_isempty(dict) then
-      return "##"
+      return ""
     end
 
     -- Fill in default branch name if missing
@@ -55,5 +54,14 @@ function M.get()
     return table.concat(parts, " ")
   end)
 end
+
+-- Redraw when git info may have changed
+vim.api.nvim_create_autocmd({ "User", "BufEnter" }, {
+  pattern = { "GitsignsUpdate", "*" },
+  -- callback = redraw.schedule,
+  callback = function()
+      redraw.schedule()
+  end
+})
 
 return M
