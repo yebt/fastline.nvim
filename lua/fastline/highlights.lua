@@ -18,6 +18,7 @@ function M.setup()
   hl(0, "FastlineModeNormalR", { fg = "#98c379", reverse = true, bold = true })
   hl(0, "FastlineModeInsertR", { fg = "#61afef", reverse = true, bold = true })
   hl(0, "FastlineModeVisualR", { fg = "#c678dd", reverse = true, bold = true })
+
 end
 
 return M

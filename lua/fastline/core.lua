@@ -1,60 +1,70 @@
 local config = require("fastline.config")
+local registry = require("fastline.registry")
+
 local rendered_once = false
-local user_modules = require("fastline").get_user_modules()
 
-local function get_module_output(name)
-  if type(name) == "table" and name.text then
-    local hl = name.hl and ("%#" .. name.hl .. "#") or ""
-    return coroutine.create(function()
-      return hl .. name.text
-    end)
+-- Detect and return a function that will eventually return a string (or coroutine)
+local function get_module_output(entry)
+  if type(entry) == "string" then
+    -- Vim expression or literal spacing
+    if entry:match("^%%{.*}$") or entry:match("^%s+$") then
+      return function() return entry end
+    end
+
+    local mod = registry.get(entry)
+    if mod and type(mod.get) == "function" then
+      return mod.get
+    else
+      return function()
+        error("Module '" .. entry .. "' could not be found or is invalid.")
+      end
+    end
+
+  elseif type(entry) == "table" and entry.text then
+    local hl = entry.hl and ("%#" .. entry.hl .. "#") or ""
+    return function()
+      return hl .. entry.text .. "%*"
+    end
   end
 
-  if type(name) ~= "string" then
-    return coroutine.create(function()
-      return ""
-    end)
+  return function()
+    return ""
   end
-
-  if name:match("^%%{.*}$") or name:match("^%s+$") then
-    return coroutine.create(function()
-      return name
-    end)
-  end
-
-  if user_modules[name] then
-    return coroutine.create(user_modules[name])
-  end
-
-  local ok, mod = pcall(require, "fastline.modules." .. name)
-  if ok and mod and mod.get then
-    return coroutine.create(mod.get)
-  end
-
-  return coroutine.create(function()
-    return "[error:load:" .. name .. "]"
-  end)
 end
 
-local function run_coroutines(modules)
+-- Handles execution of coroutines or plain providers
+local function run_coroutines(module_entries)
   local results = {}
-  for _, name in ipairs(modules) do
-    local co = get_module_output(name)
-    local ok, result = coroutine.resume(co)
+
+  for i, entry in ipairs(module_entries) do
+    local provider = get_module_output(entry)
+    local ok, value = pcall(provider)
+    local label = type(entry) == "string" and entry or ("entry[" .. i .. "]")
+
     if not ok then
-      result = "[error:" .. name .. "]"
+      value = "[fastline: error in '" .. label .. "']"
       vim.schedule(function()
-        vim.notify("fastline.nvim: error in module '" .. name .. "':\n" .. tostring(result), vim.log.levels.ERROR)
+        vim.notify("fastline.nvim: error in module '" .. label .. "':\n" .. tostring(value), vim.log.levels.ERROR)
       end)
+    elseif type(value) == "thread" then
+      local ok_thread, result = coroutine.resume(value, results, i)
+      if not ok_thread then
+        result = "[fastline: coroutine error in '" .. label .. "']"
+        vim.schedule(function()
+          vim.notify("fastline.nvim: coroutine error in '" .. label .. "':\n" .. tostring(result), vim.log.levels.ERROR)
+        end)
+      end
+      table.insert(results, result or "")
+    else
+      table.insert(results, value or "")
     end
-    table.insert(results, result or "")
   end
+
   return results
 end
 
-local function render_section(modules, separator)
-  local parts = run_coroutines(modules)
-  return table.concat(parts, separator or config.get_separator())
+local function render_section(modules)
+  return table.concat(run_coroutines(modules), " ")
 end
 
 local function render()
@@ -66,13 +76,16 @@ local function render()
   end
 
   local sections = config.get_sections()
-  local left = render_section(sections.left)
-  local center = render_section(sections.center)
-  local right = render_section(sections.right)
+  local left   = render_section(sections.left or {})
+  local center = render_section(sections.center or {})
+  local right  = render_section(sections.right or {})
 
-  return table.concat({ "%#Normal#", left, "%=", center, "%=", right }, " ")
+  return table.concat({
+    "%#Normal#", left, "%=", center, "%=", right
+  }, " ")
 end
 
 return {
   render = render,
 }
+

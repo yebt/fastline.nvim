@@ -1,13 +1,19 @@
 local M = {}
+local redraw = require("fastline.redraw")
+
 function M.get()
   local clients = vim.lsp.get_clients({ bufnr = 0 })
-  if #clients > 0 then
-    local names = {}
-    for _, c in ipairs(clients) do
-      table.insert(names, c.name)
-    end
-    return "  " .. table.concat(names, ", ")
+  if #clients == 0 then return "%#FastlineLSP#" end
+
+  local names = {}
+  for _, client in pairs(clients) do
+    table.insert(names, client.name)
   end
-  return "-"
+  return "%#FastlineLSP#LSP: " .. table.concat(names, ", ")
 end
+
+vim.api.nvim_create_autocmd({ "LspAttach", "LspDetach" }, {
+  callback = redraw.schedule,
+})
+
 return M
